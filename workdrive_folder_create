@@ -1,0 +1,12 @@
+//on creation on Opp module, creates , these folders and subfolders in the zoho workdrive
+
+loan_number = "123";
+street_address = "street_address";
+borrower = "borrower";
+create_main_folder = zoho.workdrive.createFolder(borrower + " - " + street_address + " - " + loan_number,"3cuzm26912d3a146b44759d62e1807fcf96ab","zohoworkdrive"); //url workdrive folder no, connection name of OAuth
+folder_id = create_main_folder.get("data").get("id");
+corresponding_folder = zoho.workdrive.createFolder("Correspondence",folder_id,"zohoworkdrive");
+Collateral_folder = zoho.workdrive.createFolder("Collateral",folder_id,"zohoworkdrive");
+payment_history_folder = zoho.workdrive.createFolder("Payment_History",folder_id,"zohoworkdrive");
+bankruptcy_folder = zoho.workdrive.createFolder("Bankruptcy",folder_id,"zohoworkdrive");
+assignment_and_allonge_chain = zoho.workdrive.createFolder("Assignment & Allonge Chain",folder_id,"zohoworkdrive");
