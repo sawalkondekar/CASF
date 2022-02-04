@@ -1,0 +1,90 @@
+respMap = zoho.crm.getRecordById("Deals",qid.toNumber());
+//info respMap;
+pdlist = List();
+oppName = respMap.get("Deal_Name");
+accountName = respMap.get("Account_Name");
+//fetching product listing from opportunities
+productDet = ifnull(respMap.get("Products_Listing"),"");
+productList = productDet.toJSONList();
+//checking opportunity layout
+layout = respMap.get("Layout");
+layoutName = layout.getJSON("name");
+owner = respMap.get("Owner").get("id");
+//if finished products, storing calculation line item totals
+if(layoutName == 'Finished Products')
+{
+	totalSqMeters = respMap.get("Total_Sq_Meters");
+	retailTotal = respMap.get("Retail_Total");
+	calculationDet = respMap.get("Calculation");
+	if(!isEmpty(calculationDet))
+	{
+		calculationFirst = calculationDet.get(0);
+		product = calculationFirst.getJSON("Product");
+		data = Map();
+		data.put("product",product.get("id"));
+		data.put("quantity",ifnull(totalSqMeters,"0").toLong());
+		data.put("list_price",ifnull(retailTotal / totalSqMeters,"0"));
+		data.put("Net_Total",ifnull(retailTotal,"0").toLong());
+		pdlist.add(data);
+	}
+}
+//looping product listing opportunities module
+for each  eachProd in productList
+{
+	eachProdDet = eachProd.toMap();
+	productID = eachProdDet.get("id");
+	quantity = ifnull(eachProdDet.get("Qty"),"0");
+	unitPrice = ifnull(eachProdDet.get("Unit_Price"),"0.0").toDecimal();
+	//projPrice = ifnull(eachProdDet.get("Project_Price"),"0.0").toDecimal();
+	//	discount = (unitPrice - projPrice) / unitPrice * 100;
+	//	myTotal = ifnull(eachProdDet.get("Total"),"0.0").toDecimal();
+	mp = Map();
+	mp.put("product",eachProdDet.get("Select_Product"));
+	mp.put("quantity",ifnull(quantity,"0").toLong());
+	mp.put("list_price",ifnull(unitPrice,"0"));
+	mp.put("Net_total",ifnull(0.00,"0"));
+	//	mp.put("Discount",discount.toDecimal());
+	//	mp.put("MyTotal",myTotal.toDecimal());
+	//mp.put("Pro_Price",ifnull(unitPrice,"0"));
+	//unitPrice = projPrice / quantity;
+	//	mp.put("Unit_Price_1",999.00);
+	//	mp.put("Sales_Price",ifnull(projPrice,"0"));
+	//mp.put("Pro_Price",ifnull(unitPrice,"0"));
+	//	mp.put("Line_Tax",ifnull(projPrice,"0"));
+	//mp.put("Total",ifnull(projPrice,"0"));
+	//mp.put("Net_Total",ifnull(netTotal,"0").toLong());
+	//mp.put("Description",productDesc);
+	pdlist.add(mp);
+}
+info pdlist;
+paramap = Map();
+paramap.put("Product_Details",pdlist);
+paramap.put("Subject",oppName);
+paramap.put("Account_Name",accountName);
+paramap.put("Deal_Name",qid.toLong());
+paramap.put("Status","Approved");
+paramap.put("Owner",owner);
+layoutID = respMap.get("Layout").get("id");
+//finished product
+if(layoutID == 5020652000008907612)
+{
+	paramap.put("Layout","5020652000019779001");
+	createResp = zoho.crm.createRecord("Quotes",paramap);
+	info createResp;
+	url_for_purchase_order = "https://crm.zoho.com/crm/tab/Quotes/" + createResp.get("id") + "/edit";
+	openUrl(url_for_purchase_order,"Same Window");
+}
+// for commercial product
+if(layoutID == 5020652000008907100)
+{
+	paramap.put("Layout","5020652000019779301");
+	createResp = zoho.crm.createRecord("Quotes",paramap);
+	info createResp;
+	//	url_for_purchase_order = "https://crm.zoho.com/crm/tab/Quotes/" + createResp.get("id");
+	url_for_purchase_order = "https://crm.zoho.com/crm/tab/Quotes/" + createResp.get("id") + "/edit?layoutId=5020652000019779301";
+	openUrl(url_for_purchase_order,"Same Window");
+}
+return "Successfully created Quote, please check in related lists Quote";
+//  Potentials/Deals=   Finished Products  - 5020652000008907612  , Commercial Projects  - 5020652000008907100 /////,  Standard - 5020652000000091017 ,
+// Quotes=   Finished Products  - 5020652000019779001  , Commercial Projects  - 5020652000019779301,  ///Standard - 5020652000000091017 ,
+//only finished and commercial
