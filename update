@@ -1,0 +1,21 @@
+//get created date and update into lookup contact and leads MQL date
+webformdata = zoho.crm.getRecordById("Webforms",webformid);
+created_time = webformdata.get("Created_Time"); info created_time;
+//contact
+contact  = webformdata.get("Contact");// info contact;
+if ( contact != null ) 
+{
+	contact_ID = contact.get("id"); info contact_ID;
+	myMapContacts = Map();
+	myMapContacts.put("MQL_Date1",created_time);
+	update_contact = zoho.crm.updateRecord("Contacts",contact_ID,myMapContacts); info update_contact;
+}
+//lead
+lead  = webformdata.get("Lead"); info lead;
+if ( lead != null ) 
+{
+	lead_ID = lead.get("id"); info lead_ID;
+	myMapLeads = Map();
+	myMapLeads.put("MQL_Date",created_time);
+	update_lead = zoho.crm.updateRecord("Leads",lead_ID,myMapLeads); info update_lead;
+}
