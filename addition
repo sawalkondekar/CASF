@@ -1,0 +1,14 @@
+opportunity = zoho.crm.getRecordById("Potentials",oppurtunityid.toLong());
+// info opportunity;
+Total_Price = ifnull(opportunity.get("Grand_Total"),"");
+info Total_Price;
+//update this recent 21 and 22 also in 32 before it was only total price , now did the total of both 
+Retail_Total = ifnull(opportunity.get("Retail_Total"),"");
+info Retail_Total;
+total = Total_Price + Retail_Total;
+info total;
+prodmp = Map();
+//prodmp.put("List_Price",list_price);
+prodmp.put("Amount",total);
+response = zoho.crm.updateRecord("Potentials",oppurtunityid.toLong(),prodmp);
+info response;
