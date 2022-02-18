@@ -1,0 +1,94 @@
+opportunityRecord = zoho.crm.getRecordById("Deals",dealID);
+upgrade_program = opportunityRecord.get("Upgrades_Product_Plan");
+//info upgrade_program;
+//
+productID = upgrade_program.get("id");
+productRecord = zoho.crm.getRecordById("Products",productID);
+info productRecord;
+unit_price = productRecord.get("Unit_Price");
+Books_Item_Id = productRecord.get("Books_Item_Id");
+product_type = productRecord.get("Product_Type");
+info product_type;
+//info unit_price;
+//
+mp = Map();
+mp.put("Upgrades_Price",unit_price);
+mp.put("Invoice_Created1",true);
+updateRecord = zoho.crm.updateRecord("Deals",dealID,mp);
+//info updateRecord;
+////////
+//add the same product in the z-Books
+invoiceID = opportunityRecord.get("Books_Invoice_Id");
+custmerID = opportunityRecord.get("Books_Customer_ID");
+info invoiceID;
+product_name = productRecord.get("Product_Name");
+description = productRecord.get("Descriptioin");
+///////////////////if product type = PCA then Org ID is 755583790
+if(product_type == "PCA")
+{
+	info "Organization - Pain Clinic Australia PTY LTD";
+	zohoBookData = zoho.books.getRecordsByID("Invoices","771946634",invoiceID.toLong());
+	// Get Existing Product Item
+	prodList = zohoBookData.get("invoice").get("line_items").toJSONList();
+	productList = List();
+	for each  rec in prodList
+	{
+		mp = Map();
+		mp.put("line_item_id",rec.get("line_item_id"));
+		mp.put("item_id",ifnull(rec.get("item_id"),""));
+		mp.put("description",ifnull(rec.get("description"),""));
+		mp.put("quantity",ifnull(rec.get("quantity"),0.0));
+		mp.put("rate",ifnull(rec.get("rate"),0.0));
+		mp.put("item_total",ifnull(rec.get("item_total"),0.0));
+		productList.add(mp);
+	}
+	// Extra Row added on invoices 
+	item1 = Map();
+	item1.put("item_id",Books_Item_Id.toLong());
+	item1.put("rate",unit_price);
+	item1.put("quantity",1);
+	productList.add(item1);
+	//info productList;
+	invoiceMap = Map();
+	invoiceMap.put("customer_id",custmerID);
+	invoiceMap.put("reason","Added Extra row in product line item");
+	invoiceMap.put("line_items",productList);
+	//info invoiceMap;
+	response = zoho.books.updateRecord("Invoices","771946634",invoiceID.toLong(),invoiceMap);
+	info response;
+}
+/////////////////////////  if product type is N/A then Org ID 709976379
+else
+{
+	info "Organization - MHC (Aust)";
+	zohoBookData = zoho.books.getRecordsByID("Invoices","771946634",invoiceID.toLong());
+	// Get Existing Product Item
+	prodList = zohoBookData.get("invoice").get("line_items").toJSONList();
+	productList = List();
+	for each  rec in prodList
+	{
+		mp = Map();
+		mp.put("line_item_id",rec.get("line_item_id"));
+		mp.put("item_id",ifnull(rec.get("item_id"),""));
+		mp.put("description",ifnull(rec.get("description"),""));
+		mp.put("quantity",ifnull(rec.get("quantity"),0.0));
+		mp.put("rate",ifnull(rec.get("rate"),0.0));
+		mp.put("item_total",ifnull(rec.get("item_total"),0.0));
+		productList.add(mp);
+	}
+	// Extra Row added on invoices 
+	item1 = Map();
+	item1.put("item_id",Books_Item_Id.toLong());
+	item1.put("rate",unit_price);
+	item1.put("quantity",1);
+	productList.add(item1);
+	//info productList;
+	invoiceMap = Map();
+	invoiceMap.put("customer_id",custmerID);
+	invoiceMap.put("reason","Added Extra row in product line item");
+	invoiceMap.put("line_items",productList);
+	//info invoiceMap;
+	response = zoho.books.updateRecord("Invoices","771946634",invoiceID.toLong(),invoiceMap);
+	info response;
+}
+// if product type = PCA then Org ID is 755583790
