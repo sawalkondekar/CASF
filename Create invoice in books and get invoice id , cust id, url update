@@ -1,0 +1,81 @@
+get_dealrec_details_by_id = zoho.crm.getRecordById("Deals",Deal_id);
+Get_contactrecord = get_dealrec_details_by_id.get("Contact_Name").get("id");
+Get_Program_Price = ifnull(get_dealrec_details_by_id.get("Program_Price"),"");
+search_contactrec = zoho.crm.searchRecords("Contacts","(id:equals:" + Get_contactrecord + ")");
+contact_email = search_contactrec.getJSON("Email");
+info contact_email;
+get_product_details = get_dealrec_details_by_id.get("Product_Plan");
+//info get_product_details;
+getproduct_name = get_product_details.getJSON("name");
+info getproduct_name;
+getproduct_id = get_product_details.get("id");
+info getproduct_id;
+productRecords = zoho.crm.getRecordById("Products",getproduct_id);
+//PCA Org
+info productRecords;
+product_type = productRecords.get("Product_Type");
+info product_type;
+//if(product_type == "PCA")
+//{
+//	info "Yes it is a PCA Product";
+search_for_email = {"email":contact_email};
+search_email_zbooks = zoho.books.getRecords("Contacts","771946634",search_for_email);
+info "xxx" + search_email_zbooks;
+// info search_email_zbooks;
+zcontacts = search_email_zbooks.get("contacts");
+get_email = zcontacts.getJSON("email");
+info get_email;
+contactId = zcontacts.getJSON("contact_id");
+info contactId;
+//search crm product name in items module in zohobooks PCA
+getproduct_idwith_nme = {"name":getproduct_name};
+get_itemrec_id = zoho.books.getRecords("Items","771946634",getproduct_idwith_nme);
+get_item_idd = get_itemrec_id.getJSON("items");
+get_Item_Name = get_item_idd.getJSON("name");
+//info get_Item_Name;
+item_id_of_product = get_item_idd.getJSON("item_id");
+getitem_price = get_item_idd.getJSON("rate").toLong();
+info getitem_price;
+info item_id_of_product;
+item_totalprice = 1 * getitem_price;
+info item_totalprice;
+data = Map();
+line_items = {{"item_id":item_id_of_product,"quantity":1,"item_total":item_totalprice}};
+data.put("customer_id",contactId);
+data.put("line_items",line_items);
+//data.put("allow_partial_payments","true");
+data = data.toString();
+info data;
+//create record
+if(contact_email == get_email)
+{
+	info "data";
+	response = zoho.books.createRecord("Invoices","771946634",data);
+	info response;
+	getmessage = response.get("message");
+	info getmessage;
+	getstatus = response.get("invoice");
+	GetInvoiceNumber = ifnull(getstatus.get("invoice_number"),"");
+	GetInvoiceid = ifnull(getstatus.get("invoice_id"),"");
+	info GetInvoiceid;
+	Getcustomerid = ifnull(getstatus.get("customer_id"),"");
+	info Getcustomerid;
+	GetInvoiceurl = "https://books.zoho.com/app#/invoices/" + GetInvoiceid + "?filter_by=Status.All&per_page=25&sort_column=invoice_number&sort_order=D";
+	info "getmessage" + getmessage ;
+	if(getmessage == "The invoice has been created.")
+	{
+		map = Map();
+		map.put("Invoice_Created",true);
+		map.put("Books_Invoice_Id",GetInvoiceid);
+		map.put("Books_Invoice_Number",GetInvoiceNumber);
+		map.put("Books_Customer_ID",Getcustomerid);
+		map.put("Books_Invoice_URL",GetInvoiceurl);
+		updaterecord = zoho.crm.updateRecord("Deals",Deal_id,map);
+		// 		get_payment_history_customerID = zoho.crm.getRecordById("Deals",Deal_id);
+		// 		cust_id = get_payment_history_customerID.get("Books_Customer_Id1");
+		// 		books_id = get_payment_history_customerID.get("Books_Invoice_Id");
+		// 		invoice_id = get_payment_history_customerID.get("Books_Invoice_Number");
+		info updaterecord;
+	}
+}
+//}
